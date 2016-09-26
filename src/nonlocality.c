@@ -1,3 +1,5 @@
+#include <stdio.h>
+#include <stdlib.h>
 #include "nonlocality.h"
 
 
@@ -8,7 +10,6 @@ int get_tcp_socket() {
         return s;
     close(s);
     return -1;
-    }
 }
 
 
@@ -20,4 +21,22 @@ struct sockaddr_in listen_on_port(int socket_fd, uint16_t port, int queue_length
     };
     bind(socket_fd, (struct sockaddr*)&server_sockaddr, sizeof(server_sockaddr));
     listen(socket_fd, queue_length);
+}
+
+
+void die(char *msg) {
+    puts(msg);
+    abort();
+}
+
+
+ssize_t receive_amount(int fd, char *buffer, size_t len) {
+    ssize_t received = 0;
+    while (received < len) {
+        ssize_t last_received = recv(fd, buffer + received, len - received, 0);
+        received += last_received;
+        if (!last_received)
+            return received;
+    }
+    return received;
 }

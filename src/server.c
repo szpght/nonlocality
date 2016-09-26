@@ -7,6 +7,8 @@
 #include "server.h"
 
 
+void handle_client_request(int client_fd);
+
 int main(int argc, char **argv) {
     puts("hello, wonderful world");
     ServerConfig config = load_config();
@@ -32,34 +34,37 @@ void server(ServerConfig config) {
 
     struct sockaddr_in client_sockaddr;
     int client_sockaddr_length = sizeof(client_sockaddr);
+    printf("Waiting for connection.... ");
     int client_socket = accept(control_socket, (struct sockaddr*)&client_sockaddr, (socklen_t*)&client_sockaddr_length);
+    if (client_socket < 0)
+        die("client connection accept error");
+    puts("connected");
+    for (;;) {
+        handle_client_request(client_socket);
+    }
 }
 
-void a()
-{
-    int client_connected = 0;
-    int server_socket, some_junk;
-    server_socket = socket(AF_INET, SOCK_STREAM, 0);
-    setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int));
-    // TODO error checking
 
-    struct sockaddr_in server = {
-            .sin_family = AF_INET,
-            .sin_addr.s_addr = INADDR_ANY,
-            .sin_port = htons(6666)
-    }, client;
-    bind(server_socket, (struct sockaddr*)&server, sizeof(server ));
-    listen(server_socket, 2);
-    puts("listening");
+void handle_client_request(int client_fd) {
+    int packet_type;
+    ssize_t received = receive_amount(client_fd, &packet_type, 4);
+    if (received < 4)
+        die("error when receiving packet length");
+    switch (packet_type) {
+        case NEW_CLIENT:
+            new_client(client_fd);
+            break;
+        default:
+            printf("Unknown packet type received: %d\n", packet_type);
+            abort();
+    }
 
-    int new_socket = accept(server_socket, (struct sockaddr*)&client, (socklen_t*)&some_junk);
-    char buffer[1000] = "55555555555";
-    unsigned char *tmp;
-    int received;
-    received = recv(new_socket, buffer, 1000, 0);
-    buffer[received] = 0;
-    tmp = buffer;
-    for (; *tmp != 0; tmp++)
-        printf("%.2x ", *tmp);
-    printf("\n%d: %s", received, buffer);
+
+}
+
+
+void new_client(int client_fd) {
+    char buffer[RECV_BUFFER_SIZE];
+    ssize_t received, retval;
+
 }
