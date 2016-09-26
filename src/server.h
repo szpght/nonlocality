@@ -10,3 +10,4 @@ void server(ServerConfig config);
 ServerConfig load_config();
 void new_client(int client_fd);
 void handle_client_request(int client_fd);
+void start_tunneling(NewClientPacket packet);

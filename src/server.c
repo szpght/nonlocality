@@ -9,6 +9,8 @@
 
 void handle_client_request(int client_fd);
 
+void start_tunneling(NewClientPacket packet);
+
 int main(int argc, char **argv) {
     puts("hello, wonderful world");
     ServerConfig config = load_config();
@@ -58,13 +60,19 @@ void handle_client_request(int client_fd) {
             printf("Unknown packet type received: %d\n", packet_type);
             abort();
     }
-
-
 }
 
 
 void new_client(int client_fd) {
-    char buffer[RECV_BUFFER_SIZE];
-    ssize_t received, retval;
+    NewClientPacket packet;
+    ssize_t received = receive_amount(client_fd, &packet, sizeof(packet));
+    if (received < sizeof(packet))
+        die("error!!!1!11");
+    start_tunneling(packet);
+
+}
+
+
+void start_tunneling(NewClientPacket packet) {
 
 }
