@@ -9,7 +9,7 @@
 #include "server.h"
 
 
-ServerState state = { .seq = 0 };
+ServerState state = { .seq = 666 };
 ServerConfig config;
 ConnectionVector connections;
 
@@ -78,7 +78,7 @@ void new_client(int client_fd) {
 void start_tunneling(int client_socket, NewClientPacket packet) {
     state.tunneled_port = packet.port;
     printf("Tunneling port %d\n", packet.port);
-    if (pthread_create(&state.client_thr, NULL, client_thr_routine, NULL))
+    if (pthread_create(&state.client_thr, NULL, client_thr_routine, client_socket))
         die("you have no resources to create thread, poor (wo)man");
     // TODO BLOCKING WHEN CLIENT CONNECTS
     void *junk;

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
 #include "nonlocality.h"
 
 
@@ -46,6 +47,8 @@ ssize_t send_amount(int fd, char *buffer, size_t len) {
     ssize_t sent = 0;
     while (sent < len) {
         ssize_t last_sent = send(fd, buffer + sent, len - sent, NULL);
+        if (last_sent == -1)
+            printf("sent returned -1, errno: %d\n", errno);
         sent += last_sent;
         if (!last_sent)
             break;
