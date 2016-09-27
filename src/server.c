@@ -85,11 +85,9 @@ void *client_thr_routine(void *param) {
     printf("client socket number is.... tadadam... %d\n", client_socket);
 
     // initialize connections array
-    const int connections_max = 100;
-    Connection connections[connections_max];
-    for (int i = 0; i < connections_max; ++i)
-        connections[i].available = true;
-    int connections_num = 0;
+    state.connections_max = 100;
+    state.connections = malloc(sizeof(int) * state.connections_max);
+    state.connections_num = 0;
 
     int tunneled_socket = get_tcp_socket();
     listen_on_port(tunneled_socket, state.tunneled_port, 5);
@@ -97,15 +95,21 @@ void *client_thr_routine(void *param) {
         // accept connection to be tunneled
         struct sockaddr_in client_sockaddr;
         socklen_t client_sockaddr_length = sizeof(client_sockaddr);
-        connections[connections_num].socket = accept(tunneled_socket, (struct sockaddr *) &client_sockaddr, &client_sockaddr_length);
+        state.connections[state.connections_num] = accept(tunneled_socket, (struct sockaddr *) &client_sockaddr, &client_sockaddr_length);
 
         // tell client to make new connection
-        NewConnectionData packet = { .seq = connections_num };
+        NewConnectionData packet = { .seq = state.connections_num };
+        ssize_t sent = send_amount(client_socket, (char*) &packet, sizeof(packet));
+        if (sent < sizeof(packet))
+            die("error when sending NewConnectionData");
 
+        // obvious
+        announce_new_connection();
+        ++state.connections_num;
     }
 }
 
 
-int find_available(Connection * connections) {
-
+void announce_new_connection() {
+    
 }

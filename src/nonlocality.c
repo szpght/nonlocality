@@ -33,7 +33,7 @@ void die(char *msg) {
 ssize_t receive_amount(int fd, char *buffer, size_t len) {
     ssize_t received = 0;
     while (received < len) {
-        ssize_t last_received = recv(fd, buffer + received, len - received, 0);
+        ssize_t last_received = recv(fd, buffer + received, len - received, NULL);
         received += last_received;
         if (!last_received)
             break;
@@ -45,7 +45,7 @@ ssize_t receive_amount(int fd, char *buffer, size_t len) {
 ssize_t send_amount(int fd, char *buffer, size_t len) {
     ssize_t sent = 0;
     while (sent < len) {
-        ssize_t last_sent = send(fd, buffer + sent, len - sent);
+        ssize_t last_sent = send(fd, buffer + sent, len - sent, NULL);
         sent += last_sent;
         if (!last_sent)
             break;
