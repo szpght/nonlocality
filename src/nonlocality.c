@@ -52,3 +52,10 @@ ssize_t send_amount(int fd, char *buffer, size_t len) {
     }
     return sent;
 }
+
+
+int accept_jauntily(int fd) {
+    struct sockaddr_in data_sockaddr;
+    socklen_t data_sockaddr_length = sizeof(data_sockaddr);
+    return accept(fd, &data_sockaddr, &data_sockaddr_length);
+}
