@@ -7,9 +7,8 @@
 #include "server.h"
 
 
-void handle_client_request(int client_fd);
+ServerState state;
 
-void start_tunneling(NewClientPacket packet);
 
 int main(int argc, char **argv) {
     puts("hello, wonderful world");
@@ -65,14 +64,48 @@ void handle_client_request(int client_fd) {
 
 void new_client(int client_fd) {
     NewClientPacket packet;
-    ssize_t received = receive_amount(client_fd, &packet, sizeof(packet));
+    ssize_t received = receive_amount(client_fd, (char*) &packet, sizeof(packet));
     if (received < sizeof(packet))
         die("error!!!1!11");
-    start_tunneling(packet);
+    start_tunneling(client_fd, packet);
 
 }
 
 
-void start_tunneling(NewClientPacket packet) {
+void start_tunneling(int client_socket, NewClientPacket packet) {
+    state.tunneled_port = packet.port;
+    if (pthread_create(&state.client_thr, NULL, client_thr_routine, NULL))
+        die("you have no resources to create thread, poor (wo)man");
+}
+
+
+void *client_thr_routine(void *param) {
+    int client_socket = (int) param;
+    puts("created new thread, hurray.");
+    printf("client socket number is.... tadadam... %d\n", client_socket);
+
+    // initialize connections array
+    const int connections_max = 100;
+    Connection connections[connections_max];
+    for (int i = 0; i < connections_max; ++i)
+        connections[i].available = true;
+    int connections_num = 0;
+
+    int tunneled_socket = get_tcp_socket();
+    listen_on_port(tunneled_socket, state.tunneled_port, 5);
+    for (;;) {
+        // accept connection to be tunneled
+        struct sockaddr_in client_sockaddr;
+        socklen_t client_sockaddr_length = sizeof(client_sockaddr);
+        connections[connections_num].socket = accept(tunneled_socket, (struct sockaddr *) &client_sockaddr, &client_sockaddr_length);
+
+        // tell client to make new connection
+        NewConnectionData packet = { .seq = connections_num };
+
+    }
+}
+
+
+int find_available(Connection * connections) {
 
 }
