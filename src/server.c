@@ -111,6 +111,9 @@ void *client_thr_routine(void *param) {
         // wait for client making connection
         conn.client = accept_jauntily(data_socket);
 
+        // receive sequence number
+        receive_amount(data_socket, &(NewConnectionData){}, sizeof(NewConnectionData));
+
         vector_add(&connections, conn);
     }
 }

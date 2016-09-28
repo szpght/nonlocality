@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <memory.h>
 #include "nonlocality.h"
 
 
@@ -48,7 +49,7 @@ ssize_t send_amount(int fd, char *buffer, size_t len) {
     while (sent < len) {
         ssize_t last_sent = send(fd, buffer + sent, len - sent, NULL);
         if (last_sent == -1)
-            printf("sent returned -1, errno: %d\n", errno);
+            printf("send returned -1, errno: %d\n", errno);
         sent += last_sent;
         if (!last_sent)
             break;
@@ -61,4 +62,21 @@ int accept_jauntily(int fd) {
     struct sockaddr_in data_sockaddr;
     socklen_t data_sockaddr_length = sizeof(data_sockaddr);
     return accept(fd, &data_sockaddr, &data_sockaddr_length);
+}
+
+
+int connect_from_str(char *ip, uint16_t port) {
+    int fd = get_tcp_socket();
+    struct sockaddr_in serv_ip;
+    memset(&serv_ip, 0, sizeof(struct sockaddr_in));
+    serv_ip.sin_family = AF_INET;
+    serv_ip.sin_port = htons(port);
+    if (inet_pton(AF_INET, ip, &serv_ip.sin_addr) != 1)
+        die("bad ip address");
+    int retval = connect(fd, &serv_ip, sizeof(serv_ip));
+    if (retval) {
+        printf("Connect error: %d\n", errno);
+        die("");
+    }
+    return fd;
 }

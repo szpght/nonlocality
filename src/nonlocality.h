@@ -3,7 +3,7 @@
 #include <unistd.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
-
+#include <arpa/inet.h>
 #define RECV_BUFFER_SIZE 1500
 
 
@@ -40,6 +40,7 @@ void die(char *msg);
 ssize_t receive_amount(int fd, char *buffer, size_t len);
 ssize_t send_amount(int fd, char *buffer, size_t len);
 int accept_jauntily(int fd);
+int connect_from_str(char *ip, uint16_t port);
 
 // conn_vector.c
 void vector_init(ConnectionVector *vector);
