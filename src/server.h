@@ -11,6 +11,7 @@ typedef struct {
 
 typedef struct {
     pthread_t client_thr;
+    pthread_t tunneling_thr;
     uint16_t tunneled_port;
     uint32_t seq;
 } ServerState;
@@ -23,5 +24,3 @@ void new_client(int client_fd);
 void handle_client_request(int client_fd);
 void start_tunneling(int client_socket, NewClientPacket packet);
 void *client_thr_routine(void *param);
-void *tunneling_thr_routine(void *param);
-void announce_new_connection(ConnectionPair pair);

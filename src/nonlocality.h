@@ -41,6 +41,9 @@ ssize_t receive_amount(int fd, char *buffer, size_t len);
 ssize_t send_amount(int fd, char *buffer, size_t len);
 int accept_jauntily(int fd);
 int connect_from_str(char *ip, uint16_t port);
+void *tunneling_thr_routine(void *param);
+void move_data(int src_fd, int dest_fd);
+
 
 // conn_vector.c
 void vector_init(ConnectionVector *vector);

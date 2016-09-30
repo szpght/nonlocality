@@ -4,12 +4,11 @@
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <stdlib.h>
-#include <sys/select.h>
 #include "nonlocality.h"
 #include "server.h"
 
 
-ServerState state = { .seq = 666 };
+ServerState state = { .seq = 109 };
 ServerConfig config;
 ConnectionVector connections;
 
@@ -50,10 +49,7 @@ void server(ServerConfig config) {
 
 
 void handle_client_request(int client_fd) {
-    int packet_type;
-    ssize_t received = receive_amount(client_fd, &packet_type, 4);
-    if (received < 4)
-        die("error when receiving packet length");
+    int packet_type = NEW_CLIENT;
     switch (packet_type) {
         case NEW_CLIENT:
             new_client(client_fd);
@@ -70,17 +66,22 @@ void new_client(int client_fd) {
     ssize_t received = receive_amount(client_fd, (char*) &packet, sizeof(packet));
     if (received < sizeof(packet))
         die("error!!!1!11");
+    printf("received NewClientPacket, port: %d\n", packet.port);
     start_tunneling(client_fd, packet);
 
 }
 
 
 void start_tunneling(int client_socket, NewClientPacket packet) {
-    state.tunneled_port = packet.port;
+    //state.tunneled_port = packet.port; // TODO rethink tunneled port - from client or from config?
+    state.tunneled_port = config.tunneled_port;
     printf("Tunneling port %d\n", packet.port);
     if (pthread_create(&state.client_thr, NULL, client_thr_routine, client_socket))
-        die("you have no resources to create thread, poor (wo)man");
-    // TODO BLOCKING WHEN CLIENT CONNECTS
+        die("cannot create client thread");
+    if (pthread_create(&state.tunneling_thr, NULL, tunneling_thr_routine, &connections))
+        die("cannot create tunneling thread");
+
+    // TODO don't block wnen client connects
     void *junk;
     pthread_join(state.client_thr, &junk);
 }
@@ -112,55 +113,8 @@ void *client_thr_routine(void *param) {
         conn.client = accept_jauntily(data_socket);
 
         // receive sequence number
-        receive_amount(data_socket, &(NewConnectionData){}, sizeof(NewConnectionData));
+        receive_amount(conn.client, &(NewConnectionData){}, sizeof(NewConnectionData));
 
         vector_add(&connections, conn);
     }
-}
-
-
-void *tunneling_thr_routine(void *param) {
-    for (;;) {
-        fd_set readfds;
-        FD_ZERO(&readfds);
-        int max_fd = 0;
-
-        for (int i = 0; i < connections.size; ++i) {
-            ConnectionPair pair = connections.conns[i];
-            FD_SET(pair.client, &readfds);
-            if (pair.client > max_fd)
-                max_fd = pair.client;
-            FD_SET(pair.server, &readfds);
-            if (pair.server > max_fd)
-                max_fd = pair.server;
-        }
-        struct timeval timeout;
-        timeout.tv_sec = 0;
-        timeout.tv_usec = 100 * 1000;
-        int ret = select(max_fd + 1, &readfds, NULL, NULL, &timeout);
-        if (ret == -1)
-            die("select returned -1");
-        if (ret == 0)
-            continue;
-
-        for (int i = 0; i < connections.size; ++i) {
-            ConnectionPair pair = connections.conns[i];
-            if (FD_ISSET(pair.client, &readfds))
-                move_data(pair.client, pair.server);
-            if (FD_ISSET(pair.server, &readfds))
-                move_data(pair.server, pair.client);
-        }
-    }
-}
-
-
-void move_data(int src, int dest) {
-    char buffer[RECV_BUFFER_SIZE];
-    ssize_t received = recv(src, buffer, RECV_BUFFER_SIZE, 0);
-    send_amount(dest, buffer, received);
-}
-
-
-void announce_new_connection(ConnectionPair pair) {
-
 }
