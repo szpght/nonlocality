@@ -9,31 +9,29 @@
 
 
 ServerState state = { .seq = 109 };
-ServerConfig config;
 ConnectionVector connections;
 
 
 int main(int argc, char **argv) {
     puts("hello, wonderful world");
-    ServerConfig config = load_config();
-    server(config);
+    load_config();
+    server();
     return 0;
 }
 
 
 ServerConfig load_config() {
-    // TODO error checking
-    config.control_port = atoi(getenv("CONTROL_PORT"));
-    config.tunneled_port = atoi(getenv("TUNNELED_PORT"));
-    config.data_port = atoi(getenv("DATA_PORT"));
-    return config;
+    // TODO load from command line
+    state.control_port = atoi(getenv("CONTROL_PORT"));
+    state.tunneled_port = atoi(getenv("TUNNELED_PORT"));
+    state.data_port = atoi(getenv("DATA_PORT"));
 }
 
 
-void server(ServerConfig config) {
+void server() {
     // TODO errors unprobable but it would be a good idea to check for them
     int control_socket = get_tcp_socket();
-    listen_on_port(control_socket, config.control_port, 5);
+    listen_on_port(control_socket, state.control_port, 5);
 
     struct sockaddr_in client_sockaddr;
     int client_sockaddr_length = sizeof(client_sockaddr);
@@ -73,8 +71,6 @@ void new_client(int client_fd) {
 
 
 void start_tunneling(int client_socket, NewClientPacket packet) {
-    //state.tunneled_port = packet.port; // TODO rethink tunneled port - from client or from config?
-    state.tunneled_port = config.tunneled_port;
     printf("Tunneling port %d\n", packet.port);
     if (pthread_create(&state.client_thr, NULL, client_thr_routine, client_socket))
         die("cannot create client thread");
@@ -97,7 +93,7 @@ void *client_thr_routine(void *param) {
     int tunneled_socket = get_tcp_socket();
     listen_on_port(tunneled_socket, state.tunneled_port, 5);
     int data_socket = get_tcp_socket();
-    listen_on_port(data_socket, config.data_port, 5);
+    listen_on_port(data_socket, state.data_port, 5);
     for (;;) {
         ConnectionPair conn;
         // accept connection to be tunneled
