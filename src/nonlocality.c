@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <memory.h>
-#include <sys/select.h>
 #include <pthread.h>
 #include "nonlocality.h"
 
@@ -100,21 +99,9 @@ void *tunneling_thr_routine(void *param) {
     puts("starting tunneling loop");
     for (;;) {
         fd_set readfds;
-        FD_ZERO(&readfds);
-        int max_fd = 0;
+        int max_fd = create_readfds(&readfds, connections);
 
-        for (int i = 0; i < connections->size; ++i) {
-            ConnectionPair pair = connections->conns[i];
-            FD_SET(pair.client, &readfds);
-            if (pair.client > max_fd)
-                max_fd = pair.client;
-            FD_SET(pair.server, &readfds);
-            if (pair.server > max_fd)
-                max_fd = pair.server;
-        }
-        struct timeval timeout;
-        timeout.tv_sec = 0;
-        timeout.tv_usec = 100 * 1000;
+        struct timeval timeout = { .tv_sec = 0, .tv_usec = 100 * 1000};
         int ret = select(max_fd + 1, &readfds, NULL, NULL, &timeout);
         if (ret == -1)
             die("select returned -1");
@@ -123,18 +110,62 @@ void *tunneling_thr_routine(void *param) {
 
         for (int i = 0; i < connections->size; ++i) {
             ConnectionPair pair = connections->conns[i];
-            if (FD_ISSET(pair.client, &readfds))
-                move_data(pair.client, pair.server);
-            if (FD_ISSET(pair.server, &readfds))
-                move_data(pair.server, pair.client);
+            bool success = serve_pair(&readfds, pair);
+            if (!success) {
+                close(pair.client);
+                close(pair.server);
+                vector_delete(connections, i);
+                --i;
+            }
         }
     }
 }
 
 
-void move_data(int src_fd, int dest_fd) {
+int create_readfds(fd_set *readfds, ConnectionVector *connections) {
+    int max_fd = 0;
+    FD_ZERO(readfds);
+
+    for (int i = 0; i < connections->size; ++i) {
+        ConnectionPair pair = connections->conns[i];
+        FD_SET(pair.client, readfds);
+        if (pair.client > max_fd)
+            max_fd = pair.client;
+        FD_SET(pair.server, readfds);
+        if (pair.server > max_fd)
+            max_fd = pair.server;
+    }
+    return max_fd;
+}
+
+
+bool serve_pair(fd_set *readfds, ConnectionPair pair) {
+    int count = 0;
+    if (FD_ISSET(pair.client, readfds))
+        count += move_data(pair.client, pair.server);
+    if (FD_ISSET(pair.server, readfds))
+        count += move_data(pair.server, pair.client);
+
+    // if some move_data returned false
+    if (count < 2)
+        return false;
+    return true;
+}
+
+
+bool move_data(int src_fd, int dest_fd) {
+    // TODO think about nonblocking operation
     char buffer[RECV_BUFFER_SIZE];
     ssize_t received = recv(src_fd, buffer, RECV_BUFFER_SIZE, 0);
+    if (!received) {
+        printf("Connection on socket %d lost on read\n", src_fd);
+        return false;
+    }
     printf("moving data in thread %d, sockets %d -> %d, size: %d\n", pthread_self(), src_fd, dest_fd, received);
-    send_amount(dest_fd, buffer, received);
+    ssize_t sent = send_amount(dest_fd, buffer, received);
+    if (sent < received) {
+        printf("Connection on socket %d lost on write\n", dest_fd);
+        return false;
+    }
+    return true;
 }

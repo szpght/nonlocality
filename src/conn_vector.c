@@ -2,13 +2,17 @@
 #include "nonlocality.h"
 
 void vector_init(ConnectionVector *vector) {
-    vector->capacity = 100;
+    vector->capacity = 8;
     vector->size = 0;
     vector->conns = malloc (sizeof(ConnectionPair) * vector->capacity);
 }
 
 
 void vector_add(ConnectionVector *vector, ConnectionPair pair) {
+    if (vector->size == vector->capacity) {
+        vector->capacity *= 2;
+        vector->conns = realloc(vector->conns, sizeof(ConnectionPair) * vector->capacity);
+    }
     vector->conns[vector->size] = pair;
     ++vector->size;
 }

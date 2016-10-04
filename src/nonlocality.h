@@ -3,7 +3,10 @@
 #include <unistd.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
+#include <sys/select.h>
 #include <arpa/inet.h>
+#include <stdbool.h>
+
 #define RECV_BUFFER_SIZE 1500
 
 
@@ -42,7 +45,9 @@ ssize_t send_amount(int fd, char *buffer, size_t len);
 int accept_jauntily(int fd);
 int connect_from_str(char *ip, uint16_t port);
 void *tunneling_thr_routine(void *param);
-void move_data(int src_fd, int dest_fd);
+int create_readfds(fd_set *readfds, ConnectionVector *connections);
+bool serve_pair(fd_set *readfds, ConnectionPair pair);
+bool move_data(int src_fd, int dest_fd);
 
 
 // conn_vector.c
