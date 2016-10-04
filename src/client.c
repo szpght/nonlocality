@@ -7,8 +7,6 @@
 #include "nonlocality.h"
 #include "client.h"
 
-ConnectionPair connections;
-pthread_t tunneling_thr;
 
 
 int main(int argc, char **argv) {
@@ -17,6 +15,8 @@ int main(int argc, char **argv) {
     uint16_t control_port = atoi(getenv("CONTROL_PORT"));
     uint16_t tunneled_port = atoi(getenv("TUNNELED_PORT"));
     uint16_t data_port = atoi(getenv("DATA_PORT"));
+    ConnectionVector connections;
+    pthread_t tunneling_thr;
     int retval;
 
     vector_init(&connections);
