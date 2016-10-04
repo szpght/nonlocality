@@ -140,11 +140,11 @@ int create_readfds(fd_set *readfds, ConnectionVector *connections) {
 
 
 bool serve_pair(fd_set *readfds, ConnectionPair pair) {
-    int count = 0;
+    int count = 2;
     if (FD_ISSET(pair.client, readfds))
-        count += move_data(pair.client, pair.server);
+        count -= !move_data(pair.client, pair.server);
     if (FD_ISSET(pair.server, readfds))
-        count += move_data(pair.server, pair.client);
+        count -= !move_data(pair.server, pair.client);
 
     // if some move_data returned false
     if (count < 2)
