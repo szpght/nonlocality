@@ -35,51 +35,24 @@ void server() {
 
     struct sockaddr_in client_sockaddr;
     socklen_t client_sockaddr_length = sizeof(client_sockaddr);
-    printf("Waiting for connection.... ");
-    int client_socket = accept(control_socket, (struct sockaddr*)&client_sockaddr, &client_sockaddr_length);
+    printf("Waiting for client connection.... ");
+    int client_socket = accept(control_socket, (struct sockaddr *) &client_sockaddr, &client_sockaddr_length);
     if (client_socket < 0)
         die("client connection accept error");
     puts("connected");
-    for (;;) {
-        handle_client_request(client_socket);
-    }
+    start_tunneling(client_socket);
+
+    // TODO don't block when client connects
+    pthread_join(state.client_thr, (void*){0});
 }
 
 
-void handle_client_request(int client_fd) {
-    int packet_type = NEW_CLIENT;
-    switch (packet_type) {
-        case NEW_CLIENT:
-            new_client(client_fd);
-            break;
-        default:
-            printf("Unknown packet type received: %d\n", packet_type);
-            abort();
-    }
-}
-
-
-void new_client(int client_fd) {
-    NewClientPacket packet;
-    ssize_t received = receive_amount(client_fd, (char*) &packet, sizeof(packet));
-    if (received < sizeof(packet))
-        die("error!!!1!11");
-    printf("received NewClientPacket, port: %d\n", packet.port);
-    start_tunneling(client_fd, packet);
-
-}
-
-
-void start_tunneling(int client_socket, NewClientPacket packet) {
-    printf("Tunneling port %d\n", packet.port);
+void start_tunneling(int client_socket) {
+    printf("Tunneling port %d\n", state.tunneled_port);
     if (pthread_create(&state.client_thr, NULL, client_thr_routine, client_socket))
         die("cannot create client thread");
     if (pthread_create(&state.tunneling_thr, NULL, tunneling_thr_routine, &connections))
         die("cannot create tunneling thread");
-
-    // TODO don't block wnen client connects
-    void *junk;
-    pthread_join(state.client_thr, &junk);
 }
 
 

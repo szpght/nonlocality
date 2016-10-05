@@ -26,13 +26,6 @@ int main(int argc, char **argv) {
     int control_fd = connect_from_str(server_ip, control_port);
     puts("connected to server");
 
-    // send tunneled port
-    NewClientPacket packet = { .port = tunneled_port};
-    ssize_t sent = send_amount(control_fd, &packet, sizeof(packet));
-    if (sent < sizeof(packet))
-        die("could send NewClientPacket");
-    puts("tunneled port sent");
-
     // listen for new connection requests
     for (;;) {
         NewConnectionData ncpacket;
