@@ -8,7 +8,7 @@
 #include "server.h"
 
 
-ServerState state = { .seq = 109 };
+ServerState state = { .seq = 1 };
 ConnectionVector connections;
 
 
@@ -68,11 +68,13 @@ void *client_thr_routine(void *param) {
     listen_on_port(data_socket, state.data_port, 5);
     for (;;) {
         ConnectionPair conn;
+        conn.seq = state.seq++;
+
         // accept connection to be tunneled
         conn.server = accept_jauntily(tunneled_socket);
 
         // tell client to make new connection
-        NewConnectionData packet = { .seq = state.seq++ };
+        NewConnectionData packet = { .seq = conn.seq };
         ssize_t sent = send_amount(client_socket, (char*) &packet, sizeof(packet));
         if (sent < sizeof(packet))
             die("error when sending NewConnectionData");

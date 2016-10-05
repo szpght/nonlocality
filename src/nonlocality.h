@@ -26,6 +26,7 @@ typedef struct {
 } NewConnectionData;
 
 typedef struct {
+    int seq;
     int server;
     int client;
 } ConnectionPair;
