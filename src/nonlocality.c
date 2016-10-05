@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <memory.h>
-#include <pthread.h>
 #include "nonlocality.h"
 
 
@@ -99,15 +98,18 @@ void *tunneling_thr_routine(void *param) {
     puts("starting tunneling loop");
     for (;;) {
         fd_set readfds;
+        pthread_mutex_lock(&connections->mutex);
         int max_fd = create_readfds(&readfds, connections);
+        pthread_mutex_unlock(&connections->mutex);
 
-        struct timeval timeout = { .tv_sec = 0, .tv_usec = 100 * 1000};
+        struct timeval timeout = { .tv_sec = 0, .tv_usec = 50 * 1000};
         int ret = select(max_fd + 1, &readfds, NULL, NULL, &timeout);
         if (ret == -1)
             die("select returned -1");
         if (ret == 0)
             continue;
 
+        pthread_mutex_lock(&connections->mutex);
         for (int i = 0; i < connections->size; ++i) {
             ConnectionPair pair = connections->conns[i];
             bool success = serve_pair(&readfds, pair);
@@ -118,6 +120,7 @@ void *tunneling_thr_routine(void *param) {
                 --i;
             }
         }
+        pthread_mutex_unlock(&connections->mutex);
     }
 }
 

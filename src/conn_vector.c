@@ -1,10 +1,12 @@
 #include <stdlib.h>
+#include <pthread.h>
 #include "nonlocality.h"
 
 void vector_init(ConnectionVector *vector) {
     vector->capacity = 8;
     vector->size = 0;
     vector->conns = malloc (sizeof(ConnectionPair) * vector->capacity);
+    pthread_mutex_init(&vector->mutex, NULL);
 }
 
 

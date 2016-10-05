@@ -111,6 +111,8 @@ void *client_thr_routine(void *param) {
         // receive sequence number
         receive_amount(conn.client, &(NewConnectionData){}, sizeof(NewConnectionData));
 
+        pthread_mutex_lock(&connections.mutex);
         vector_add(&connections, conn);
+        pthread_mutex_unlock(&connections.mutex);
     }
 }

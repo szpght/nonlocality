@@ -5,6 +5,7 @@
 #include <sys/socket.h>
 #include <sys/select.h>
 #include <arpa/inet.h>
+#include <pthread.h>
 #include <stdbool.h>
 
 #define RECV_BUFFER_SIZE 1500
@@ -33,6 +34,7 @@ typedef struct {
     int size;
     int capacity;
     ConnectionPair *conns;
+    pthread_mutex_t mutex;
 } ConnectionVector;
 
 

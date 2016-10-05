@@ -57,7 +57,9 @@ int main(int argc, char **argv) {
         conn.client = connect_from_str(destination_ip, tunneled_port);
 
         // add connection to list
+        pthread_mutex_lock(&connections.mutex);
         vector_add(&connections, conn);
+        pthread_mutex_unlock(&connections.mutex);
         puts("connection added to list");
     }
 }
