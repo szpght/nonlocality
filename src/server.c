@@ -4,6 +4,7 @@
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <stdlib.h>
+#include <signal.h>
 #include "nonlocality.h"
 #include "server.h"
 
@@ -15,12 +16,19 @@ ConnectionVector connections;
 int main(int argc, char **argv) {
     puts("hello, wonderful world");
     load_config();
+    signal(SIGUSR1, signal_handler);
     server();
     return 0;
 }
 
 
-ServerConfig load_config() {
+void signal_handler(int signal) {
+    if (signal == SIGUSR1)
+        print_connections(&connections);
+}
+
+
+void load_config() {
     // TODO load from command line
     state.control_port = atoi(getenv("CONTROL_PORT"));
     state.tunneled_port = atoi(getenv("TUNNELED_PORT"));
@@ -43,7 +51,7 @@ void server() {
     start_tunneling(client_socket);
 
     // TODO don't block when client connects
-    pthread_join(state.client_thr, (void*){0});
+    pthread_join(state.client_thr, &(void*){0});
 }
 
 

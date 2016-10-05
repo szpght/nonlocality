@@ -5,8 +5,10 @@
 #include <sys/socket.h>
 #include <sys/select.h>
 #include <arpa/inet.h>
-#include <pthread.h>
 #include <stdbool.h>
+#include <errno.h>
+#define __USE_XOPEN2K8 // needed for pthread mutex types
+#include <pthread.h>
 
 #define RECV_BUFFER_SIZE 1500
 
@@ -51,6 +53,7 @@ void *tunneling_thr_routine(void *param);
 int create_readfds(fd_set *readfds, ConnectionVector *connections);
 bool serve_pair(fd_set *readfds, ConnectionPair pair);
 bool move_data(int src_fd, int dest_fd);
+void print_connections(ConnectionVector *vector);
 
 
 // conn_vector.c

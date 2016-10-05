@@ -1,12 +1,18 @@
 #include <stdlib.h>
-#include <pthread.h>
 #include "nonlocality.h"
 
 void vector_init(ConnectionVector *vector) {
     vector->capacity = 8;
     vector->size = 0;
     vector->conns = malloc (sizeof(ConnectionPair) * vector->capacity);
-    pthread_mutex_init(&vector->mutex, NULL);
+
+    // setting mutex to recursive in case of signal
+    // being handled by thread already owning mutex
+    pthread_mutexattr_t mutexattr;
+    pthread_mutexattr_init(&mutexattr);
+    pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE);
+    pthread_mutex_init(&vector->mutex, &mutexattr);
+    pthread_mutexattr_destroy(&mutexattr);
 }
 
 
