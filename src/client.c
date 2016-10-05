@@ -17,7 +17,6 @@ int main(int argc, char **argv) {
     uint16_t data_port = atoi(getenv("DATA_PORT"));
     ConnectionVector connections;
     pthread_t tunneling_thr;
-    int retval;
 
     vector_init(&connections);
 
@@ -48,7 +47,7 @@ int main(int argc, char **argv) {
         puts("created new connection to server");
 
         // send sequence number of created connection
-        retval = send_amount(conn.server, &ncpacket, sizeof(ncpacket));
+        ssize_t retval = send_amount(conn.server, &ncpacket, sizeof(ncpacket));
         if (retval < sizeof(ncpacket))
             die("cannot send sequence number of created connection");
         puts("sequence number sent");

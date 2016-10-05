@@ -34,9 +34,9 @@ void server() {
     listen_on_port(control_socket, state.control_port, 5);
 
     struct sockaddr_in client_sockaddr;
-    int client_sockaddr_length = sizeof(client_sockaddr);
+    socklen_t client_sockaddr_length = sizeof(client_sockaddr);
     printf("Waiting for connection.... ");
-    int client_socket = accept(control_socket, (struct sockaddr*)&client_sockaddr, (socklen_t*)&client_sockaddr_length);
+    int client_socket = accept(control_socket, (struct sockaddr*)&client_sockaddr, &client_sockaddr_length);
     if (client_socket < 0)
         die("client connection accept error");
     puts("connected");
@@ -87,7 +87,6 @@ void *client_thr_routine(void *param) {
     int client_socket = (int) param;
     puts("created client thread, hurray.");
 
-    // initialize connections array
     vector_init(&connections);
 
     int tunneled_socket = get_tcp_socket();

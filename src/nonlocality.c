@@ -42,7 +42,7 @@ ssize_t receive_amount(int fd, char *buffer, size_t len) {
     }
     printf("received %d bytes in thread %d from socket %d: ", len, pthread_self(), fd);
     for (int i = 0; i < len; ++i)
-        printf("%02x", buffer[i]);
+        printf("%02x", (unsigned char)buffer[i]);
     puts("");
     return received;
 }
@@ -51,7 +51,7 @@ ssize_t receive_amount(int fd, char *buffer, size_t len) {
 ssize_t send_amount(int fd, char *buffer, size_t len) {
     printf("sending %d bytes in thread %d to socket %d: ",len, pthread_self(), fd);
     for (int i = 0; i < len; ++i)
-        printf("%02x", buffer[i]);
+        printf("%02x", (unsigned char)buffer[i]);
     puts("");
 
     ssize_t sent = 0;
@@ -84,6 +84,7 @@ int connect_from_str(char *ip, uint16_t port) {
     serv_ip.sin_port = htons(port);
     if (inet_pton(AF_INET, ip, &serv_ip.sin_addr) != 1)
         die("bad ip address");
+
     int retval = connect(fd, &serv_ip, sizeof(serv_ip));
     if (retval) {
         printf("Connect error: %d\n", errno);
