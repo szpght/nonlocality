@@ -37,6 +37,8 @@ void load_config() {
 
 
 void server() {
+    vector_init(&connections);
+
     // TODO errors unprobable but it would be a good idea to check for them
     int control_socket = get_tcp_socket();
     listen_on_port(control_socket, state.control_port, 5);
@@ -67,8 +69,6 @@ void start_tunneling(int client_socket) {
 void *client_thr_routine(void *param) {
     int client_socket = (int) param;
     puts("created client thread, hurray.");
-
-    vector_init(&connections);
 
     int tunneled_socket = get_tcp_socket();
     listen_on_port(tunneled_socket, state.tunneled_port, 5);
