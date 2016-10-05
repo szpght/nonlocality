@@ -11,6 +11,7 @@
 #include <pthread.h>
 
 #define RECV_BUFFER_SIZE 1500
+#define CONNECT_TIMEOUT_SEC 5
 
 
 enum PacketType {

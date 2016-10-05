@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <memory.h>
+#include <fcntl.h>
 #include "nonlocality.h"
 
 
@@ -85,12 +86,25 @@ int connect_from_str(char *ip, uint16_t port) {
     if (inet_pton(AF_INET, ip, &serv_ip.sin_addr) != 1)
         die("bad ip address");
 
-    int retval = connect(fd, &serv_ip, sizeof(serv_ip));
-    if (retval) {
-        printf("Connect error: %d\n", errno);
-        die("");
+    fcntl(fd, F_SETFL, O_NONBLOCK);
+    connect(fd, (struct sockaddr*) &serv_ip, sizeof(serv_ip));
+    fd_set fdset;
+    FD_ZERO(&fdset);
+    FD_SET(fd, &fdset);
+    struct timeval tv = { .tv_sec = CONNECT_TIMEOUT_SEC, .tv_usec = 0 };
+
+    if (select(fd + 1, NULL, &fdset, NULL, &tv) == 1) {
+        int so_error;
+        getsockopt(fd, SOL_SOCKET, SO_ERROR, &so_error, &(socklen_t){sizeof so_error});
+        if (!so_error) {
+            int opts = fcntl(fd, F_GETFL, 0);
+            opts &= (~O_NONBLOCK);
+            fcntl(fd, F_SETFL, opts);
+            return fd;
+        }
     }
-    return fd;
+    close(fd);
+    return -1;
 }
 
 
