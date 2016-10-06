@@ -19,6 +19,6 @@ extern ServerState state;
 
 void server();
 void signal_handler(int signal);
-void load_config();
+void load_config(char **argv);
 void start_tunneling(int client_socket);
 void *client_thr_routine(void *param);

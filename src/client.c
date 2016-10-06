@@ -11,11 +11,14 @@ ConnectionVector connections;
 
 
 int main(int argc, char **argv) {
-    char server_ip[] = "127.0.0.1";
-    char destination_ip[] = "127.0.0.1";
-    uint16_t control_port = atoi(getenv("CONTROL_PORT"));
-    uint16_t tunneled_port = atoi(getenv("TUNNELED_PORT"));
-    uint16_t data_port = atoi(getenv("DATA_PORT"));
+    if (argc < 6) {
+        die("Usage: <server ip> <dest ip> <tunneled port> <control port> <data port>");
+    }
+    char *server_ip = argv[1];
+    char *destination_ip = argv[2];
+    uint16_t control_port = atoi(argv[4]);
+    uint16_t tunneled_port = atoi(argv[3]);
+    uint16_t data_port = atoi(argv[5]);
     pthread_t tunneling_thr;
 
     vector_init(&connections);

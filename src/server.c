@@ -14,8 +14,11 @@ ConnectionVector connections;
 
 
 int main(int argc, char **argv) {
+    if (argc < 4) {
+        die("Usage: <tunneled port> <control port> <data port>");
+    }
     puts("hello, wonderful world");
-    load_config();
+    load_config(argv);
     signal(SIGUSR1, signal_handler);
     server();
     return 0;
@@ -28,11 +31,10 @@ void signal_handler(int signal) {
 }
 
 
-void load_config() {
-    // TODO load from command line
-    state.control_port = atoi(getenv("CONTROL_PORT"));
-    state.tunneled_port = atoi(getenv("TUNNELED_PORT"));
-    state.data_port = atoi(getenv("DATA_PORT"));
+void load_config(char **argv) {
+    state.control_port = atoi(argv[2]);
+    state.tunneled_port = atoi(argv[1]);
+    state.data_port = atoi(argv[3]);
 }
 
 
