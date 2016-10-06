@@ -41,19 +41,19 @@ ssize_t receive_amount(int fd, char *buffer, size_t len) {
         if (!last_received)
             break;
     }
-    printf("received %d bytes in thread %d from socket %d: ", len, pthread_self(), fd);
+    /*printf("received %d bytes in thread %d from socket %d: ", len, pthread_self(), fd);
     for (int i = 0; i < len; ++i)
         printf("%02x", (unsigned char)buffer[i]);
-    puts("");
+    puts("");*/
     return received;
 }
 
 
 ssize_t send_amount(int fd, char *buffer, size_t len) {
-    printf("sending %d bytes in thread %d to socket %d: ",len, pthread_self(), fd);
+    /*printf("sending %d bytes in thread %d to socket %d: ",len, pthread_self(), fd);
     for (int i = 0; i < len; ++i)
         printf("%02x", (unsigned char)buffer[i]);
-    puts("");
+    puts("");*/
 
     ssize_t sent = 0;
     while (sent < len) {
@@ -180,7 +180,7 @@ bool move_data(int src_fd, int dest_fd) {
         printf("Connection on socket %d lost on read\n", src_fd);
         return false;
     }
-    printf("moving data in thread %d, sockets %d -> %d, size: %d\n", pthread_self(), src_fd, dest_fd, received);
+    //printf("moving data in thread %d, sockets %d -> %d, size: %d\n", pthread_self(), src_fd, dest_fd, received);
     ssize_t sent = send_amount(dest_fd, buffer, received);
     if (sent < received) {
         printf("Connection on socket %d lost on write\n", dest_fd);
