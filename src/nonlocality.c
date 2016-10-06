@@ -86,6 +86,7 @@ int connect_from_str(char *ip, uint16_t port) {
     if (inet_pton(AF_INET, ip, &serv_ip.sin_addr) != 1)
         die("bad ip address");
 
+    int so_error = 0;
     fcntl(fd, F_SETFL, O_NONBLOCK);
     connect(fd, (struct sockaddr*) &serv_ip, sizeof(serv_ip));
     fd_set fdset;
@@ -94,7 +95,6 @@ int connect_from_str(char *ip, uint16_t port) {
     struct timeval tv = { .tv_sec = CONNECT_TIMEOUT_SEC, .tv_usec = 0 };
 
     if (select(fd + 1, NULL, &fdset, NULL, &tv) == 1) {
-        int so_error;
         getsockopt(fd, SOL_SOCKET, SO_ERROR, &so_error, &(socklen_t){sizeof so_error});
         if (!so_error) {
             int opts = fcntl(fd, F_GETFL, 0);
@@ -103,6 +103,7 @@ int connect_from_str(char *ip, uint16_t port) {
             return fd;
         }
     }
+    printf("so error: %d\n", so_error);
     close(fd);
     return -1;
 }
