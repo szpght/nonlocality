@@ -24,7 +24,11 @@ int main(int argc, char **argv) {
     if (pthread_create(&tunneling_thr, NULL, tunneling_thr_routine, &connections))
         die("cannot create tunneling thread");
 
-    int control_fd = connect_from_str(server_ip, control_port);
+    int control_fd = -1;
+    while (control_fd == -1) {
+        control_fd = connect_from_str(server_ip, control_port);
+        sleep(1);
+    }
     puts("connected to server");
 
     // listen for new connection requests
