@@ -23,7 +23,10 @@ struct sockaddr_in listen_on_port(int socket_fd, uint16_t port, int queue_length
             .sin_port = htons(port)
     };
     bind(socket_fd, (struct sockaddr*)&server_sockaddr, sizeof(server_sockaddr));
-    listen(socket_fd, queue_length);
+    if (listen(socket_fd, queue_length)) {
+        printf("Cannot listen on socket, errno %d\n", errno);
+        exit(1);
+    }
 }
 
 
