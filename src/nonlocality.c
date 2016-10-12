@@ -74,7 +74,11 @@ ssize_t send_amount(int fd, char *buffer, size_t len) {
 int accept_jauntily(int fd) {
     struct sockaddr_in data_sockaddr;
     socklen_t data_sockaddr_length = sizeof(data_sockaddr);
-    int retval = accept(fd, &data_sockaddr, &data_sockaddr_length);;
+    int retval = accept(fd, &data_sockaddr, &data_sockaddr_length);
+    if (retval == -1) {
+        printf("error when accepting connection, errno: %d\n", errno);
+        return -1;
+    }
     printf("accepted connection on socket %d in thread %d\n", retval, pthread_self());
     return retval;
 }
