@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -55,6 +56,7 @@ int create_readfds(fd_set *readfds, ConnectionVector *connections);
 bool serve_pair(fd_set *readfds, ConnectionPair pair);
 bool move_data(int src_fd, int dest_fd);
 void print_connections(ConnectionVector *vector);
+uint16_t port_from_string(char *port);
 
 
 // conn_vector.c

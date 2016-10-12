@@ -198,3 +198,12 @@ void print_connections(ConnectionVector *vector) {
     }
     pthread_mutex_unlock(&vector->mutex);
 }
+
+
+uint16_t port_from_string(char *port_argument) {
+    long port = strtol(port_argument, NULL, 10);
+    if (port > 0 && port < 65536)
+        return (uint16_t ) port;
+    printf("Bad port value: %s\n", port_argument);
+    exit(1);
+}

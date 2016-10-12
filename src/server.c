@@ -32,9 +32,9 @@ void signal_handler(int signal) {
 
 
 void load_config(char **argv) {
-    state.control_port = atoi(argv[2]);
-    state.tunneled_port = atoi(argv[1]);
-    state.data_port = atoi(argv[3]);
+    state.control_port = port_from_string(argv[2]);
+    state.tunneled_port = port_from_string(argv[1]);
+    state.data_port = port_from_string(argv[3]);
 }
 
 

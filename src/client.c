@@ -16,9 +16,9 @@ int main(int argc, char **argv) {
     }
     char *server_ip = argv[1];
     char *destination_ip = argv[2];
-    uint16_t control_port = atoi(argv[4]);
-    uint16_t tunneled_port = atoi(argv[3]);
-    uint16_t data_port = atoi(argv[5]);
+    uint16_t control_port = port_from_string(argv[4]);
+    uint16_t tunneled_port = port_from_string(argv[3]);
+    uint16_t data_port = port_from_string(argv[5]);
     pthread_t tunneling_thr;
 
     vector_init(&connections);
