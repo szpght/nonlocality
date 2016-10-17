@@ -85,7 +85,7 @@ void *client_thr_routine(void *param) {
         // tell client to make new connection
         // if contact unsuccesfull, disconnect tunneled connection
         NewConnectionData packet = { .seq = conn.seq };
-        int sent = sendToClient((char*) &packet, sizeof(packet));
+        int sent = send_to_client((char *) &packet, sizeof(packet));
         if (sent == -1) {
             sequence_message(conn.seq, "could not send connection request to client - disconnecting");
             goto error;
@@ -118,7 +118,7 @@ void *client_thr_routine(void *param) {
     }
 }
 
-int sendToClient(char *buffer, size_t size) {
-    // TODO implement function
-    return -1;
+int send_to_client(char *buffer, size_t size) {
+    // TODO implement function correctly
+    return send_amount(state.client_socket, buffer, size);
 }
