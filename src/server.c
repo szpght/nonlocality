@@ -81,21 +81,40 @@ void *client_thr_routine(void *param) {
 
         // accept connection to be tunneled
         conn.server = accept_jauntily(tunneled_socket);
+        sequence_message(conn.seq, "accepted connection");
 
         // tell client to make new connection
+        // if contact unsuccesfull, disconnect tunneled connection
         NewConnectionData packet = { .seq = conn.seq };
-        ssize_t sent = send_amount(state.client_socket, (char*) &packet, sizeof(packet));
-        if (sent < sizeof(packet))
-            die("error when sending NewConnectionData");
+        int sent = sendToClient((char*) &packet, sizeof(packet));
+        if (sent == -1) {
+            sequence_message(conn.seq, "could not send connection request to client - disconnecting");
+            close(conn.server);
+            continue;
+        }
 
         // wait for client making connection
+        // TODO add timeout
         conn.client = accept_jauntily(data_socket);
+        sequence_message(conn.seq, "accepted connection from client");
 
         // receive sequence number
-        receive_amount(conn.client, &(NewConnectionData){}, sizeof(NewConnectionData));
+        ssize_t received = receive_amount(conn.client, &(NewConnectionData){}, sizeof(NewConnectionData));
+        if (received < sizeof(NewConnectionData)) {
+            sequence_message(conn.seq, "could not receive sequence number - disconnecting");
+            close(conn.client);
+            close(conn.server);
+            continue;
+        }
+        printf("seq=%d: received sequence number - connection established\n");
 
         pthread_mutex_lock(&connections.mutex);
         vector_add(&connections, conn);
         pthread_mutex_unlock(&connections.mutex);
     }
+}
+
+int sendToClient(char *buffer, size_t size) {
+    // TODO implement function
+    return -1;
 }
