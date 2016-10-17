@@ -35,7 +35,7 @@ void die(char *msg) {
     puts(msg);
     puts("stacktrace:");
     void *addresses[1024];
-    int n = backtrace(&addresses, 1024);
+    int n = backtrace(addresses, 1024);
     char **symbols = backtrace_symbols(addresses, n);
     for (int i = 0; i < n; ++i)
         puts(symbols[i]);
