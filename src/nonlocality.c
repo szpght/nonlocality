@@ -51,20 +51,11 @@ ssize_t receive_amount(int fd, char *buffer, size_t len) {
         if (!last_received)
             break;
     }
-    /*printf("received %d bytes in thread %d from socket %d: ", len, pthread_self(), fd);
-    for (int i = 0; i < len; ++i)
-        printf("%02x", (unsigned char)buffer[i]);
-    puts("");*/
     return received;
 }
 
 
 ssize_t send_amount(int fd, char *buffer, size_t len) {
-    /*printf("sending %d bytes in thread %d to socket %d: ",len, pthread_self(), fd);
-    for (int i = 0; i < len; ++i)
-        printf("%02x", (unsigned char)buffer[i]);
-    puts("");*/
-
     ssize_t sent = 0;
     while (sent < len) {
         ssize_t last_sent = send(fd, buffer + sent, len - sent, NULL);
