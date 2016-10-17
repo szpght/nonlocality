@@ -221,3 +221,8 @@ uint16_t port_from_string(char *port_argument) {
     printf("Bad port value: %s\n", port_argument);
     exit(1);
 }
+
+
+void sequence_message(int seq, char *msg) {
+    printf("seq=%d: %s\n", seq, msg);
+}
