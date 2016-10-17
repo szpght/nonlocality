@@ -76,8 +76,7 @@ void *client_thr_routine(void *param) {
     int data_socket = get_tcp_socket();
     listen_on_port(data_socket, state.data_port, 5);
     for (;;) {
-        ConnectionPair conn;
-        conn.seq = state.seq++;
+        ConnectionPair conn = { .seq = state.seq++, -1, -1 };
 
         // accept connection to be tunneled
         conn.server = accept_jauntily(tunneled_socket);
@@ -89,28 +88,33 @@ void *client_thr_routine(void *param) {
         int sent = sendToClient((char*) &packet, sizeof(packet));
         if (sent == -1) {
             sequence_message(conn.seq, "could not send connection request to client - disconnecting");
-            close(conn.server);
-            continue;
+            goto error;
         }
 
         // wait for client making connection
-        // TODO add timeout
-        conn.client = accept_jauntily(data_socket);
+        conn.client = accept_timeout(data_socket);
+        if (conn.client == -1) {
+            sequence_message(conn.seq, "accept timed out - disconnecting");
+            goto error;
+        }
         sequence_message(conn.seq, "accepted connection from client");
 
         // receive sequence number
         ssize_t received = receive_amount(conn.client, &(NewConnectionData){}, sizeof(NewConnectionData));
         if (received < sizeof(NewConnectionData)) {
             sequence_message(conn.seq, "could not receive sequence number - disconnecting");
-            close(conn.client);
-            close(conn.server);
-            continue;
+            goto error;
         }
-        printf("seq=%d: received sequence number - connection established\n");
+        sequence_message(conn.seq, "received sequence number - connection established");
 
         pthread_mutex_lock(&connections.mutex);
         vector_add(&connections, conn);
         pthread_mutex_unlock(&connections.mutex);
+
+        continue;
+        error:
+        close(conn.server);
+        close(conn.client);
     }
 }
 
