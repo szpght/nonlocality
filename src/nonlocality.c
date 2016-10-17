@@ -226,3 +226,31 @@ uint16_t port_from_string(char *port_argument) {
 void sequence_message(int seq, char *msg) {
     printf("seq=%d: %s\n", seq, msg);
 }
+
+
+int accept_timeout(int fd) {
+    struct sockaddr_in data_sockaddr;
+    socklen_t data_sockaddr_length = sizeof(data_sockaddr);
+    fd_set readfds;
+    FD_ZERO(&readfds);
+    FD_SET(fd, &readfds);
+    struct timeval timeout = { .tv_sec = CONNECT_TIMEOUT_SEC, .tv_usec = 0 };
+
+    int retval = select(fd + 1, &readfds, NULL, NULL, &timeout);
+
+    // timeout
+    if (retval == 0) {
+        return -1;
+    }
+    if (retval == -1) {
+        printf("error on select when accepting connection, errno %d\n", errno);
+        return -1;
+    }
+    retval = accept(fd, &data_sockaddr, &data_sockaddr_length);
+    if (retval == -1) {
+        printf("error on accept when accepting connection, errno: %d\n", errno);
+        return -1;
+    }
+    printf("accepted connection on socket %d in thread %d\n", retval, pthread_self());
+    return retval;
+}

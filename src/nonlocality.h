@@ -57,6 +57,7 @@ bool move_data(int src_fd, int dest_fd);
 void print_connections(ConnectionVector *vector);
 uint16_t port_from_string(char *port);
 void sequence_message(int seq, char *msg);
+int accept_timeout(int fd);
 
 
 // conn_vector.c
