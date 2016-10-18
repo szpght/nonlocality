@@ -33,21 +33,18 @@ void load_config(char **argv) {
 void server() {
     vector_init(&connections);
 
-    // TODO errors unprobable but it would be a good idea to check for them
     int control_socket = get_tcp_socket();
     listen_on_port(control_socket, state.control_port, 5);
-
-    struct sockaddr_in client_sockaddr;
-    socklen_t client_sockaddr_length = sizeof(client_sockaddr);
-    printf("Waiting for client connection.... ");
-    state.client_socket = accept(control_socket, (struct sockaddr *) &client_sockaddr, &client_sockaddr_length);
-    if (state.client_socket < 0)
-        die("client connection accept error");
-    puts("connected");
     start_tunneling();
 
-    // TODO don't block when client connects
-    pthread_join(state.client_thr, &(void*){0});
+    for (;;) {
+        state.client_socket = accept_jauntily(control_socket);
+        if (state.client_socket < 0)
+            die("client connection accept error");
+        puts("client connected");
+
+        // TODO ping
+    }
 }
 
 
