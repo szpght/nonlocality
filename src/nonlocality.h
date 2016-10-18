@@ -12,6 +12,7 @@
 
 #define RECV_BUFFER_SIZE 1500
 #define CONNECT_TIMEOUT_SEC 5
+#define PING_TIMEOUT_SEC 20
 
 
 enum PacketType {
@@ -57,6 +58,8 @@ bool move_data(int src_fd, int dest_fd);
 uint16_t port_from_string(char *port);
 void sequence_message(int seq, char *msg);
 int accept_timeout(int fd);
+ssize_t recv_timeout(int fd, void *buffer, size_t len, int timeout_sec);
+ssize_t send_timeout(int fd, void *buffer, size_t len, int timeout_sec);
 
 
 // conn_vector.c

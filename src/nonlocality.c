@@ -235,3 +235,27 @@ int accept_timeout(int fd) {
     printf("accepted connection on socket %d in thread %d\n", retval, pthread_self());
     return retval;
 }
+
+
+ssize_t recv_timeout(int fd, void *buffer, size_t len, int timeout_sec) {
+    fd_set readfds;
+    FD_ZERO(&readfds);
+    FD_SET(fd, &readfds);
+    struct timeval timeout = { timeout_sec, 0 };
+    int retval = select(fd + 1, &readfds, NULL, NULL, &timeout);
+    if (retval != 1)
+        return -1;
+    return recv(fd, &buffer, len, NULL);
+}
+
+
+ssize_t send_timeout(int fd, void *buffer, size_t len, int timeout_sec) {
+    fd_set writefds;
+    FD_ZERO(&writefds);
+    FD_SET(fd, &writefds);
+    struct timeval timeout = { timeout_sec, 0 };
+    int retval = select(fd + 1, NULL, &writefds, NULL, &timeout);
+    if (retval != 1)
+        return -1;
+    return send(fd, buffer, len, NULL);
+}
