@@ -195,16 +195,6 @@ bool move_data(int src_fd, int dest_fd) {
 }
 
 
-void print_connections(ConnectionVector *vector) {
-    pthread_mutex_lock(&vector->mutex);
-    printf("%d connections, sequence numbers:\n", vector->size);
-    for (int i = 0; i < vector->size; ++i) {
-        printf("%d\n", vector->conns[i].seq);
-    }
-    pthread_mutex_unlock(&vector->mutex);
-}
-
-
 uint16_t port_from_string(char *port_argument) {
     long port = strtol(port_argument, NULL, 10);
     if (port > 0 && port < 65536)

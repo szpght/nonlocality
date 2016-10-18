@@ -22,7 +22,6 @@ int main(int argc, char **argv) {
     pthread_t tunneling_thr;
 
     vector_init(&connections);
-    signal(SIGUSR1, signal_handler);
 
     if (pthread_create(&tunneling_thr, NULL, tunneling_thr_routine, &connections))
         die("cannot create tunneling thread");
@@ -63,11 +62,4 @@ int main(int argc, char **argv) {
         pthread_mutex_unlock(&connections.mutex);
         puts("connection added to list");
     }
-}
-
-
-// TODO check if works in wild
-void signal_handler(int signal) {
-    if (signal == SIGUSR1)
-        print_connections(&connections);
 }

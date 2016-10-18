@@ -4,7 +4,6 @@
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <stdlib.h>
-#include <signal.h>
 #include "nonlocality.h"
 #include "server.h"
 
@@ -19,15 +18,8 @@ int main(int argc, char **argv) {
     }
     puts("hello, wonderful world");
     load_config(argv);
-    signal(SIGUSR1, signal_handler);
     server();
     return 0;
-}
-
-
-void signal_handler(int signal) {
-    if (signal == SIGUSR1)
-        print_connections(&connections);
 }
 
 

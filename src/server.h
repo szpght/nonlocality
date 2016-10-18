@@ -19,7 +19,6 @@ typedef struct {
 extern ServerState state;
 
 void server();
-void signal_handler(int signal);
 void load_config(char **argv);
 void start_tunneling();
 void *client_thr_routine(void *param);
