@@ -12,7 +12,10 @@
 
 #define RECV_BUFFER_SIZE 1500
 #define CONNECT_TIMEOUT_SEC 5
-#define PING_TIMEOUT_SEC 20
+#define PING_SEND_INTERVAL_SEC 10
+#define PING_SEND_TIMEOUT_SEC 5
+#define CLIENT_SEND_TIMEOUT_SEC 30
+#define SEND_TO_CLIENT_RETRY_INTERVAL_SEC 1
 
 
 enum PacketType {
@@ -49,6 +52,7 @@ struct sockaddr_in listen_on_port(int socket_fd, uint16_t port, int queue_length
 void die(char *msg);
 ssize_t receive_amount(int fd, char *buffer, size_t len);
 ssize_t send_amount(int fd, char *buffer, size_t len);
+ssize_t send_amount_timeout(int fd, char *buffer, size_t len, int timeout_sec);
 int accept_jauntily(int fd);
 int connect_from_str(char *ip, uint16_t port);
 void *tunneling_thr_routine(void *param);

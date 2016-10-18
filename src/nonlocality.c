@@ -69,6 +69,21 @@ ssize_t send_amount(int fd, char *buffer, size_t len) {
 }
 
 
+ssize_t send_amount_timeout(int fd, char *buffer, size_t len, int timeout_sec) {
+    // TODO think of something more abstract
+    ssize_t sent = 0;
+    while (sent < len) {
+        ssize_t last_sent = send_timeout(fd, buffer + sent, len - sent, timeout_sec);
+        if (last_sent == -1) {
+            printf("send_timeout returned -1, errno: %d\n", errno);
+            return sent;
+        }
+        sent += last_sent;
+    }
+    return sent;
+}
+
+
 int accept_jauntily(int fd) {
     struct sockaddr_in data_sockaddr;
     socklen_t data_sockaddr_length = sizeof(data_sockaddr);

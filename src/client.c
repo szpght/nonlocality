@@ -14,6 +14,7 @@ int main(int argc, char **argv) {
     if (argc < 6) {
         die("Usage: <server ip> <dest ip> <tunneled port> <control port> <data port>");
     }
+    signal(SIGPIPE, SIG_IGN); // ignore broken pipe signal
     char *server_ip = argv[1];
     char *destination_ip = argv[2];
     uint16_t control_port = port_from_string(argv[4]);
@@ -40,6 +41,8 @@ int main(int argc, char **argv) {
         if (received < sizeof(ncpacket))
             die ("full NewConnectionData packet not received");
         printf("received NewConnectionData, seq: %d\n", ncpacket.seq);
+        if (ncpacket.seq == 0)
+            continue;
 
         // create new connection
         ConnectionPair conn;

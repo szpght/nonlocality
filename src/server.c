@@ -4,6 +4,7 @@
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <stdlib.h>
+#include <signal.h>
 #include "nonlocality.h"
 #include "server.h"
 
@@ -17,6 +18,7 @@ int main(int argc, char **argv) {
         die("Usage: <tunneled port> <control port> <data port>");
     }
     puts("hello, wonderful world");
+    signal(SIGPIPE, SIG_IGN); // ignore broken pipe signal
     load_config(argv);
     server();
     return 0;
@@ -32,28 +34,40 @@ void load_config(char **argv) {
 
 void server() {
     vector_init(&connections);
+    pthread_mutex_init(&state.client_socket_send_mutex, NULL);
+    state.client_socket = -1;
 
     int control_socket = get_tcp_socket();
     listen_on_port(control_socket, state.control_port, 5);
-    start_tunneling();
+    start_threads();
 
     for (;;) {
-        state.client_socket = accept_jauntily(control_socket);
+        int new_client_connection = accept_jauntily(control_socket);
+        close(state.client_socket);
+        state.client_socket = new_client_connection;
         if (state.client_socket < 0)
             die("client connection accept error");
         puts("client connected");
-
-        // TODO ping
     }
 }
 
 
-void start_tunneling() {
+void *ping_thr_routine(void *param) {
+    for (;;) {
+        usleep(PING_SEND_INTERVAL_SEC * 1000000);
+        send_amount_timeout(state.client_socket, &(uint32_t){0}, 4, PING_SEND_TIMEOUT_SEC);
+    }
+}
+
+
+void start_threads() {
     printf("Tunneling port %d\n", state.tunneled_port);
     if (pthread_create(&state.client_thr, NULL, client_thr_routine, NULL))
         die("cannot create client thread");
     if (pthread_create(&state.tunneling_thr, NULL, tunneling_thr_routine, &connections))
         die("cannot create tunneling thread");
+    if (pthread_create(&state.ping_thr, NULL, ping_thr_routine, NULL))
+        die("cannot create ping thread");
 }
 
 
@@ -107,7 +121,13 @@ void *client_thr_routine(void *param) {
     }
 }
 
+
 int send_to_client(char *buffer, size_t size) {
-    // TODO implement function correctly
-    return send_amount(state.client_socket, buffer, size);
+    ssize_t sent;
+    for (;;) {
+        sent = send_amount_timeout(state.client_socket, buffer, size, CLIENT_SEND_TIMEOUT_SEC);
+        if (sent == size)
+            break;
+        sleep(SEND_TO_CLIENT_RETRY_INTERVAL_SEC);
+    }
 }
