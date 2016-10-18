@@ -4,9 +4,6 @@
 
 
 typedef struct {
-} ServerConfig;
-
-typedef struct {
     pthread_t client_thr;
     pthread_t tunneling_thr;
     uint16_t control_port;
