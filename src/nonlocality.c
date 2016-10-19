@@ -194,16 +194,18 @@ bool serve_pair(fd_set *readfds, ConnectionPair *pair) {
     if (FD_ISSET(pair->client, readfds)) {
         ssize_t moved = move_data(pair->client, pair->server);
         count -= !moved;
-
+        pair->from_client += moved;
     }
     if (FD_ISSET(pair->server, readfds)) {
         ssize_t moved = move_data(pair->server, pair->client);
         count -= !moved;
+        pair->from_server += moved;
     }
 
     // if some move_data returned false
     if (count < 2)
         return false;
+    time(&pair->last_activity);
     return true;
 }
 

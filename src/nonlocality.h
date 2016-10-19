@@ -38,6 +38,9 @@ typedef struct {
     int seq;
     int server;
     int client;
+    uint64_t from_server;
+    uint64_t from_client;
+    time_t last_activity;
 } ConnectionPair;
 
 typedef struct {

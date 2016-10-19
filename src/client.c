@@ -51,8 +51,7 @@ int main(int argc, char **argv) {
         }
 
         // create new connection
-        ConnectionPair conn;
-        conn.seq = ncpacket.seq;
+        ConnectionPair conn = { .seq = ncpacket.seq };
         conn.server = connect_from_str(server_ip, data_port);
         puts("created new connection to server");
 
