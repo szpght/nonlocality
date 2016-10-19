@@ -158,11 +158,11 @@ void *tunneling_thr_routine(void *param) {
 
         pthread_mutex_lock(&connections->mutex);
         for (int i = 0; i < connections->size; ++i) {
-            ConnectionPair pair = connections->conns[i];
+            ConnectionPair *pair = &connections->conns[i];
             bool success = serve_pair(&readfds, pair);
             if (!success) {
-                close(pair.client);
-                close(pair.server);
+                close(pair->client);
+                close(pair->server);
                 vector_delete(connections, i);
                 --i;
             }
@@ -189,12 +189,17 @@ int create_readfds(fd_set *readfds, ConnectionVector *connections) {
 }
 
 
-bool serve_pair(fd_set *readfds, ConnectionPair pair) {
+bool serve_pair(fd_set *readfds, ConnectionPair *pair) {
     int count = 2;
-    if (FD_ISSET(pair.client, readfds))
-        count -= !move_data(pair.client, pair.server);
-    if (FD_ISSET(pair.server, readfds))
-        count -= !move_data(pair.server, pair.client);
+    if (FD_ISSET(pair->client, readfds)) {
+        ssize_t moved = move_data(pair->client, pair->server);
+        count -= !moved;
+
+    }
+    if (FD_ISSET(pair->server, readfds)) {
+        ssize_t moved = move_data(pair->server, pair->client);
+        count -= !moved;
+    }
 
     // if some move_data returned false
     if (count < 2)
@@ -203,21 +208,21 @@ bool serve_pair(fd_set *readfds, ConnectionPair pair) {
 }
 
 
-bool move_data(int src_fd, int dest_fd) {
+ssize_t move_data(int src_fd, int dest_fd) {
     // TODO think about nonblocking operation
     char buffer[RECV_BUFFER_SIZE];
     ssize_t received = recv(src_fd, buffer, RECV_BUFFER_SIZE, 0);
     if (!received) {
         printf("Connection on socket %d lost on read\n", src_fd);
-        return false;
+        return 0;
     }
     //printf("moving data in thread %d, sockets %d -> %d, size: %d\n", pthread_self(), src_fd, dest_fd, received);
     ssize_t sent = send_amount(dest_fd, buffer, received);
     if (sent < received) {
         printf("Connection on socket %d lost on write\n", dest_fd);
-        return false;
+        return 0;
     }
-    return true;
+    return sent;
 }
 
 
