@@ -8,7 +8,6 @@
 #include <arpa/inet.h>
 #include <stdbool.h>
 #include <errno.h>
-#define __USE_XOPEN2K8 // needed for pthread mutex types
 #include <pthread.h>
 
 #define RECV_BUFFER_SIZE 1500
