@@ -62,6 +62,7 @@ ssize_t receive_amount_timeout(int fd, char *buffer, size_t len, int timeout_sec
 int accept_jauntily(int fd);
 int connect_from_str(char *ip, uint16_t port);
 void *tunneling_thr_routine(void *param);
+void print_pair_statistics(ConnectionPair *pair);
 int create_readfds(fd_set *readfds, ConnectionVector *connections);
 bool serve_pair(fd_set *readfds, ConnectionPair *pair);
 ssize_t move_data(int src_fd, int dest_fd);

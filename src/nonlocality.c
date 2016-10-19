@@ -104,7 +104,7 @@ int accept_jauntily(int fd) {
         printf("error when accepting connection, errno: %d\n", errno);
         return -1;
     }
-    printf("accepted connection on socket %d in thread %d\n", retval, pthread_self());
+    printf("accepted connection on socket %d in thread %p\n", retval, pthread_self());
     return retval;
 }
 
@@ -163,12 +163,24 @@ void *tunneling_thr_routine(void *param) {
             if (!success) {
                 close(pair->client);
                 close(pair->server);
+                sequence_message(pair->seq, "connection closed with stats:");
+                print_pair_statistics(pair);
                 vector_delete(connections, i);
                 --i;
             }
         }
         pthread_mutex_unlock(&connections->mutex);
     }
+}
+
+
+void print_pair_statistics(ConnectionPair *pair) {
+    char time_human[100];
+    struct tm *ts;
+    ts = localtime(&pair->last_activity);
+    strftime(time_human, sizeof time_human, "%a %Y-%m-%d %H:%M:%S", ts);
+    printf("client -> server: %llub\nserver -> client: %llub\nlast activity: %s\n",
+            pair->from_client, pair->from_server, time_human);
 }
 
 
@@ -266,7 +278,7 @@ int accept_timeout(int fd) {
         printf("error on accept when accepting connection, errno: %d\n", errno);
         return -1;
     }
-    printf("accepted connection on socket %d in thread %d\n", retval, pthread_self());
+    printf("accepted connection on socket %d in thread %p\n", retval, pthread_self());
     return retval;
 }
 
