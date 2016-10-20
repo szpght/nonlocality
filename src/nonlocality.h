@@ -20,16 +20,6 @@
 #define SEND_TO_CLIENT_RETRY_INTERVAL_SEC 1
 
 
-enum PacketType {
-    KEEP_ALIVE = 0,
-    NEW_CLIENT = 1,
-    NEW_CONNECTION = 2,
-};
-
-typedef struct {
-    uint16_t port; // port on which machine behind firewall listens
-} NewClientPacket;
-
 typedef struct {
     uint32_t seq;
 } NewConnectionData;
@@ -55,10 +45,10 @@ typedef struct {
 int get_tcp_socket();
 struct sockaddr_in listen_on_port(int socket_fd, uint16_t port, int queue_length);
 void die(char *msg);
-ssize_t receive_amount(int fd, char *buffer, size_t len);
-ssize_t send_amount(int fd, char *buffer, size_t len);
-ssize_t send_amount_timeout(int fd, char *buffer, size_t len, int timeout_sec);
-ssize_t receive_amount_timeout(int fd, char *buffer, size_t len, int timeout_sec);
+ssize_t receive_amount(int fd, void *buffer, size_t len);
+ssize_t send_amount(int fd, void *buffer, size_t len);
+ssize_t send_amount_timeout(int fd, void *buffer, size_t len, int timeout_sec);
+ssize_t receive_amount_timeout(int fd, void *buffer, size_t len, int timeout_sec);
 int accept_jauntily(int fd);
 int connect_from_str(char *ip, uint16_t port);
 void *tunneling_thr_routine(void *param);

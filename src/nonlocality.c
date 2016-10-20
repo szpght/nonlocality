@@ -43,10 +43,10 @@ void die(char *msg) {
 }
 
 
-ssize_t receive_amount(int fd, char *buffer, size_t len) {
+ssize_t receive_amount(int fd, void *buffer, size_t len) {
     ssize_t received = 0;
     while (received < len) {
-        ssize_t last_received = recv(fd, buffer + received, len - received, NULL);
+        ssize_t last_received = recv(fd, buffer + received, len - received, 0);
         received += last_received;
         if (!last_received)
             break;
@@ -55,10 +55,10 @@ ssize_t receive_amount(int fd, char *buffer, size_t len) {
 }
 
 
-ssize_t send_amount(int fd, char *buffer, size_t len) {
+ssize_t send_amount(int fd, void *buffer, size_t len) {
     ssize_t sent = 0;
     while (sent < len) {
-        ssize_t last_sent = send(fd, buffer + sent, len - sent, NULL);
+        ssize_t last_sent = send(fd, buffer + sent, len - sent, 0);
         if (last_sent == -1) {
             printf("send returned -1, errno: %d\n", errno);
             return sent;
@@ -69,7 +69,7 @@ ssize_t send_amount(int fd, char *buffer, size_t len) {
 }
 
 
-ssize_t send_amount_timeout(int fd, char *buffer, size_t len, int timeout_sec) {
+ssize_t send_amount_timeout(int fd, void *buffer, size_t len, int timeout_sec) {
     // TODO think of something more abstract
     ssize_t sent = 0;
     while (sent < len) {
@@ -84,7 +84,7 @@ ssize_t send_amount_timeout(int fd, char *buffer, size_t len, int timeout_sec) {
 }
 
 
-ssize_t receive_amount_timeout(int fd, char *buffer, size_t len, int timeout_sec) {
+ssize_t receive_amount_timeout(int fd, void *buffer, size_t len, int timeout_sec) {
     ssize_t received = 0;
     while (received < len) {
         ssize_t last_received = recv_timeout(fd, buffer + received, len - received, timeout_sec);
@@ -99,12 +99,11 @@ ssize_t receive_amount_timeout(int fd, char *buffer, size_t len, int timeout_sec
 int accept_jauntily(int fd) {
     struct sockaddr_in data_sockaddr;
     socklen_t data_sockaddr_length = sizeof(data_sockaddr);
-    int retval = accept(fd, &data_sockaddr, &data_sockaddr_length);
+    int retval = accept(fd, (struct sockaddr*) &data_sockaddr, &data_sockaddr_length);
     if (retval == -1) {
         printf("error when accepting connection, errno: %d\n", errno);
         return -1;
     }
-    printf("accepted connection on socket %d in thread %p\n", retval, pthread_self());
     return retval;
 }
 
@@ -180,7 +179,7 @@ void print_pair_statistics(ConnectionPair *pair) {
     ts = localtime(&pair->last_activity);
     strftime(time_human, sizeof time_human, "%a %Y-%m-%d %H:%M:%S", ts);
     printf("client -> server: %llub\nserver -> client: %llub\nlast activity: %s\n",
-            pair->from_client, pair->from_server, time_human);
+           (long long unsigned) pair->from_client, (long long unsigned) pair->from_server, time_human);
 }
 
 
@@ -227,13 +226,10 @@ ssize_t move_data(int src_fd, int dest_fd) {
     char buffer[RECV_BUFFER_SIZE];
     ssize_t received = recv(src_fd, buffer, RECV_BUFFER_SIZE, 0);
     if (!received) {
-        printf("Connection on socket %d lost on read\n", src_fd);
         return 0;
     }
-    //printf("moving data in thread %d, sockets %d -> %d, size: %d\n", pthread_self(), src_fd, dest_fd, received);
     ssize_t sent = send_amount(dest_fd, buffer, received);
     if (sent < received) {
-        printf("Connection on socket %d lost on write\n", dest_fd);
         return 0;
     }
     return sent;
@@ -273,12 +269,11 @@ int accept_timeout(int fd) {
         printf("error on select when accepting connection, errno %d\n", errno);
         return -1;
     }
-    retval = accept(fd, &data_sockaddr, &data_sockaddr_length);
+    retval = accept(fd, (struct sockaddr*) &data_sockaddr, &data_sockaddr_length);
     if (retval == -1) {
         printf("error on accept when accepting connection, errno: %d\n", errno);
         return -1;
     }
-    printf("accepted connection on socket %d in thread %p\n", retval, pthread_self());
     return retval;
 }
 
@@ -291,7 +286,7 @@ ssize_t recv_timeout(int fd, void *buffer, size_t len, int timeout_sec) {
     int retval = select(fd + 1, &readfds, NULL, NULL, &timeout);
     if (retval != 1)
         return -1;
-    return recv(fd, buffer, len, NULL);
+    return recv(fd, buffer, len, 0);
 }
 
 
@@ -303,5 +298,5 @@ ssize_t send_timeout(int fd, void *buffer, size_t len, int timeout_sec) {
     int retval = select(fd + 1, NULL, &writefds, NULL, &timeout);
     if (retval != 1)
         return -1;
-    return send(fd, buffer, len, NULL);
+    return send(fd, buffer, len, 0);
 }

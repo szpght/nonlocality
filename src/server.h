@@ -22,4 +22,4 @@ void *ping_thr_routine(void *param);
 void load_config(char **argv);
 void start_threads();
 void *client_thr_routine(void *param);
-int send_to_client(char *buffer, size_t size);
+ssize_t send_to_client(void *buffer, size_t size);

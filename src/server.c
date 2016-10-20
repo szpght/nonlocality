@@ -88,7 +88,7 @@ void *client_thr_routine(void *param) {
         // tell client to make new connection
         // if contact unsuccesfull, disconnect tunneled connection
         NewConnectionData packet = { .seq = conn.seq };
-        int sent = send_to_client((char *) &packet, sizeof(packet));
+        ssize_t sent = send_to_client(&packet, sizeof(packet));
         if (sent == -1) {
             sequence_message(conn.seq, "could not send connection request to client - disconnecting");
             goto error;
@@ -122,7 +122,7 @@ void *client_thr_routine(void *param) {
 }
 
 
-int send_to_client(char *buffer, size_t size) {
+ssize_t send_to_client(void *buffer, size_t size) {
     ssize_t sent;
     for (;;) {
         sent = send_amount_timeout(state.client_socket, buffer, size, CLIENT_SEND_TIMEOUT_SEC);

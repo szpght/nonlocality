@@ -34,9 +34,8 @@ int main(int argc, char **argv) {
     // listen for new connection requests
     for (;;) {
         NewConnectionData ncpacket;
-        ssize_t received = 0;
         for (;;) {
-            received = receive_amount_timeout(control_fd, &ncpacket, sizeof ncpacket, CLIENT_CONNECTION_RESET_TIME);
+            ssize_t received = receive_amount_timeout(control_fd, &ncpacket, sizeof ncpacket, CLIENT_CONNECTION_RESET_TIME);
             if (received == sizeof ncpacket)
                 break;
             puts("didn't receive ping/new connection on time - reconnecting");
