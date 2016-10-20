@@ -44,16 +44,21 @@ int main(int argc, char **argv) {
             control_fd = connect_to_server(server_ip, control_port);
         }
 
-
-        printf("received NewConnectionData, seq: %d\n", ncpacket.seq);
         if (ncpacket.seq == 0) {
+            struct tm *tv = localtime(&(time_t){time(NULL)});
+            char buffer[100];
+            strftime(buffer, sizeof buffer, "%Y-%m-%d %H:%M:%S", tv);
+            printf("ping at %s\r", buffer);
+            fflush(stdout);
             continue;
         }
+
+        printf("new connection request, seq=%d\n", ncpacket.seq);
 
         // create new connection
         ConnectionPair conn = { .seq = ncpacket.seq };
         conn.server = connect_from_str(server_ip, data_port);
-        puts("created new connection to server");
+        puts("established connection to server");
 
         // send sequence number of created connection
         ssize_t retval = send_amount(conn.server, &ncpacket, sizeof(ncpacket));
@@ -68,7 +73,7 @@ int main(int argc, char **argv) {
         pthread_mutex_lock(&connections.mutex);
         vector_add(&connections, conn);
         pthread_mutex_unlock(&connections.mutex);
-        puts("connection added to list");
+        printf("connection %d added to list\n", conn.seq);
     }
 }
 
