@@ -27,22 +27,28 @@ int main(int argc, char **argv) {
     if (pthread_create(&tunneling_thr, NULL, tunneling_thr_routine, &connections))
         die("cannot create tunneling thread");
 
-    int control_fd = -1;
-    while (control_fd == -1) {
-        control_fd = connect_from_str(server_ip, control_port);
-        sleep(1);
-    }
+    int control_fd = connect_to_server(server_ip, control_port);
+
     puts("connected to server");
 
     // listen for new connection requests
     for (;;) {
         NewConnectionData ncpacket;
-        ssize_t received = receive_amount(control_fd, &ncpacket, sizeof(ncpacket));
-        if (received < sizeof(ncpacket))
-            die ("full NewConnectionData packet not received");
+        ssize_t received = 0;
+        for (;;) {
+            received = receive_amount_timeout(control_fd, &ncpacket, sizeof ncpacket, CLIENT_CONNECTION_RESET_TIME);
+            if (received == sizeof ncpacket)
+                break;
+            puts("didn't receive ping/new connection on time - reconnecting");
+            close(control_fd);
+            control_fd = connect_to_server(server_ip, control_port);
+        }
+
+
         printf("received NewConnectionData, seq: %d\n", ncpacket.seq);
-        if (ncpacket.seq == 0)
+        if (ncpacket.seq == 0) {
             continue;
+        }
 
         // create new connection
         ConnectionPair conn;
@@ -64,5 +70,16 @@ int main(int argc, char **argv) {
         vector_add(&connections, conn);
         pthread_mutex_unlock(&connections.mutex);
         puts("connection added to list");
+    }
+}
+
+
+int connect_to_server(char *ip, uint16_t port) {
+    int fd = -1;
+    for (;;) {
+        fd = connect_from_str(ip, port);
+        if (fd != -1)
+            return fd;
+        sleep(CLIENT_CONNECT_RETRY_TIME_SEC);
     }
 }

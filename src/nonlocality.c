@@ -84,6 +84,18 @@ ssize_t send_amount_timeout(int fd, char *buffer, size_t len, int timeout_sec) {
 }
 
 
+ssize_t receive_amount_timeout(int fd, char *buffer, size_t len, int timeout_sec) {
+    ssize_t received = 0;
+    while (received < len) {
+        ssize_t last_received = recv_timeout(fd, buffer + received, len - received, timeout_sec);
+        if (last_received <= 0)
+            break;
+        received += last_received;
+    }
+    return received;
+}
+
+
 int accept_jauntily(int fd) {
     struct sockaddr_in data_sockaddr;
     socklen_t data_sockaddr_length = sizeof(data_sockaddr);
@@ -123,7 +135,6 @@ int connect_from_str(char *ip, uint16_t port) {
             return fd;
         }
     }
-    printf("so error: %d\n", so_error);
     close(fd);
     return -1;
 }
@@ -236,6 +247,7 @@ int accept_timeout(int fd) {
 
     // timeout
     if (retval == 0) {
+        puts("accept timeout - select() returned 0");
         return -1;
     }
     if (retval == -1) {
@@ -260,7 +272,7 @@ ssize_t recv_timeout(int fd, void *buffer, size_t len, int timeout_sec) {
     int retval = select(fd + 1, &readfds, NULL, NULL, &timeout);
     if (retval != 1)
         return -1;
-    return recv(fd, &buffer, len, NULL);
+    return recv(fd, buffer, len, NULL);
 }
 
 

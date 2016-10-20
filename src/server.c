@@ -127,7 +127,7 @@ int send_to_client(char *buffer, size_t size) {
     for (;;) {
         sent = send_amount_timeout(state.client_socket, buffer, size, CLIENT_SEND_TIMEOUT_SEC);
         if (sent == size)
-            break;
+            return sent;
         sleep(SEND_TO_CLIENT_RETRY_INTERVAL_SEC);
     }
 }

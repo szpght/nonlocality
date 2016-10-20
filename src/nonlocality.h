@@ -15,6 +15,8 @@
 #define PING_SEND_INTERVAL_SEC 10
 #define PING_SEND_TIMEOUT_SEC 5
 #define CLIENT_SEND_TIMEOUT_SEC 30
+#define CLIENT_CONNECTION_RESET_TIME 25
+#define CLIENT_CONNECT_RETRY_TIME_SEC 1
 #define SEND_TO_CLIENT_RETRY_INTERVAL_SEC 1
 
 
@@ -53,6 +55,7 @@ void die(char *msg);
 ssize_t receive_amount(int fd, char *buffer, size_t len);
 ssize_t send_amount(int fd, char *buffer, size_t len);
 ssize_t send_amount_timeout(int fd, char *buffer, size_t len, int timeout_sec);
+ssize_t receive_amount_timeout(int fd, char *buffer, size_t len, int timeout_sec);
 int accept_jauntily(int fd);
 int connect_from_str(char *ip, uint16_t port);
 void *tunneling_thr_routine(void *param);
