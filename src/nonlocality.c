@@ -121,9 +121,7 @@ int connect_from_str(char *ip, uint16_t port) {
     int so_error = 0;
     fcntl(fd, F_SETFL, O_NONBLOCK);
     connect(fd, (struct sockaddr*) &serv_ip, sizeof(serv_ip));
-    fd_set fdset;
-    FD_ZERO(&fdset);
-    FD_SET(fd, &fdset);
+    fd_set fdset = oneval_fd_set(fd);
     struct timeval tv = { .tv_sec = CONNECT_TIMEOUT_SEC, .tv_usec = 0 };
 
     if (select(fd + 1, NULL, &fdset, NULL, &tv) == 1) {
@@ -252,9 +250,7 @@ void sequence_message(int seq, char *msg) {
 
 
 int accept_timeout(int fd) {
-    fd_set readfds;
-    FD_ZERO(&readfds);
-    FD_SET(fd, &readfds);
+    fd_set readfds = oneval_fd_set(fd);
     struct timeval timeout = { .tv_sec = CONNECT_TIMEOUT_SEC, .tv_usec = 0 };
 
     int retval = select(fd + 1, &readfds, NULL, NULL, &timeout);
@@ -278,9 +274,7 @@ int accept_timeout(int fd) {
 
 
 ssize_t recv_timeout(int fd, void *buffer, size_t len, int timeout_sec) {
-    fd_set readfds;
-    FD_ZERO(&readfds);
-    FD_SET(fd, &readfds);
+    fd_set readfds = oneval_fd_set(fd)
     struct timeval timeout = { timeout_sec, 0 };
     int retval = select(fd + 1, &readfds, NULL, NULL, &timeout);
     if (retval != 1)
@@ -290,12 +284,18 @@ ssize_t recv_timeout(int fd, void *buffer, size_t len, int timeout_sec) {
 
 
 ssize_t send_timeout(int fd, void *buffer, size_t len, int timeout_sec) {
-    fd_set writefds;
-    FD_ZERO(&writefds);
-    FD_SET(fd, &writefds);
+    fd_set writefds = oneval_fd_set(fd);
     struct timeval timeout = { timeout_sec, 0 };
     int retval = select(fd + 1, NULL, &writefds, NULL, &timeout);
     if (retval != 1)
         return -1;
     return send(fd, buffer, len, 0);
+}
+
+
+fd_set oneval_fd_set(int fd) {
+    fd_set set;
+    FD_ZERO(&set);
+    FD_SET(fd, &set);
+    return set;
 }

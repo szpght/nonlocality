@@ -61,6 +61,7 @@ void sequence_message(int seq, char *msg);
 int accept_timeout(int fd);
 ssize_t recv_timeout(int fd, void *buffer, size_t len, int timeout_sec);
 ssize_t send_timeout(int fd, void *buffer, size_t len, int timeout_sec);
+fd_set oneval_fd_set(int fd);
 
 
 // conn_vector.c
