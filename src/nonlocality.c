@@ -8,12 +8,15 @@
 
 
 int get_tcp_socket() {
+    errno = 0;
     int s = socket(AF_INET, SOCK_STREAM, 0);
+    int socket_errno = errno;
     int err = setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int));
     if (s != -1 && !err)
         return s;
-    close(s);
-    return -1;
+    puts("socket() or setsockopt() failed");
+    printf("socket() errno: %d\nsetsockopt() errno: %d", socket_errno, errno);
+    exit(1);
 }
 
 
@@ -25,7 +28,7 @@ struct sockaddr_in listen_on_port(int socket_fd, uint16_t port, int queue_length
     };
     bind(socket_fd, (struct sockaddr*)&server_sockaddr, sizeof(server_sockaddr));
     if (listen(socket_fd, queue_length)) {
-        printf("Cannot listen on socket, errno %d\n", errno);
+        printf("Cannot listen on port %d, errno %d\n", port, errno);
         exit(1);
     }
 }
@@ -39,7 +42,7 @@ void die(char *msg) {
     char **symbols = backtrace_symbols(addresses, n);
     for (int i = 0; i < n; ++i)
         puts(symbols[i]);
-    abort();
+    exit(1);
 }
 
 
@@ -47,9 +50,9 @@ ssize_t receive_amount(int fd, void *buffer, size_t len) {
     ssize_t received = 0;
     while (received < len) {
         ssize_t last_received = recv(fd, buffer + received, len - received, 0);
-        received += last_received;
-        if (!last_received)
+        if (last_received == 0 || last_received == -1)
             break;
+        received += last_received;
     }
     return received;
 }
@@ -97,9 +100,7 @@ ssize_t receive_amount_timeout(int fd, void *buffer, size_t len, int timeout_sec
 
 
 int accept_jauntily(int fd) {
-    struct sockaddr_in data_sockaddr;
-    socklen_t data_sockaddr_length = sizeof(data_sockaddr);
-    int retval = accept(fd, (struct sockaddr*) &data_sockaddr, &data_sockaddr_length);
+    int retval = accept(fd, &(struct sockaddr){}, &(socklen_t){ sizeof(struct sockaddr_in)});
     if (retval == -1) {
         printf("error when accepting connection, errno: %d\n", errno);
         return -1;
@@ -251,8 +252,6 @@ void sequence_message(int seq, char *msg) {
 
 
 int accept_timeout(int fd) {
-    struct sockaddr_in data_sockaddr;
-    socklen_t data_sockaddr_length = sizeof(data_sockaddr);
     fd_set readfds;
     FD_ZERO(&readfds);
     FD_SET(fd, &readfds);
@@ -269,7 +268,7 @@ int accept_timeout(int fd) {
         printf("error on select when accepting connection, errno %d\n", errno);
         return -1;
     }
-    retval = accept(fd, (struct sockaddr*) &data_sockaddr, &data_sockaddr_length);
+    retval = accept(fd, &(struct sockaddr){}, &(socklen_t){ sizeof(struct sockaddr_in) });
     if (retval == -1) {
         printf("error on accept when accepting connection, errno: %d\n", errno);
         return -1;
