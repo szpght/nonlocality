@@ -4,6 +4,7 @@
 #include <memory.h>
 #include <fcntl.h>
 #include <execinfo.h>
+#include <math.h>
 #include "nonlocality.h"
 
 
@@ -274,7 +275,7 @@ int accept_timeout(int fd) {
 
 
 ssize_t recv_timeout(int fd, void *buffer, size_t len, int timeout_sec) {
-    fd_set readfds = oneval_fd_set(fd)
+    fd_set readfds = oneval_fd_set(fd);
     struct timeval timeout = { timeout_sec, 0 };
     int retval = select(fd + 1, &readfds, NULL, NULL, &timeout);
     if (retval != 1)
@@ -296,6 +297,27 @@ ssize_t send_timeout(int fd, void *buffer, size_t len, int timeout_sec) {
 fd_set oneval_fd_set(int fd) {
     fd_set set;
     FD_ZERO(&set);
-    FD_SET(fd, &set);
+    if (fd != -1)
+        FD_SET(fd, &set);
     return set;
+}
+
+
+int wait_readable(int fd, double timeout_sec) {
+    return select_one(fd, NULL_FD, timeout_sec);
+}
+
+
+int wait_writable(int fd, double timeout_sec) {
+    return select_one(NULL_FD, fd, timeout_sec);
+}
+
+
+int select_one(int readfd, int writefd,  double timeout_sec) {
+    fd_set readfds = oneval_fd_set(readfd);
+    fd_set writefds = oneval_fd_set(writefd);
+    int maxfd = readfd > writefd ? readfd : writefd;
+    int ms = (int) (modf(timeout_sec, &(double){0}) * 10e6);
+    struct timeval timeout = { (int) timeout_sec, ms };
+    return select(maxfd + 1, &readfds, &writefds, NULL, &timeout);
 }

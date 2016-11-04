@@ -19,6 +19,7 @@
 #define CLIENT_CONNECT_RETRY_TIME_SEC 1
 #define SEND_TO_CLIENT_RETRY_INTERVAL_SEC 1
 
+#define NULL_FD -1
 
 typedef struct {
     uint32_t seq;
@@ -62,6 +63,9 @@ int accept_timeout(int fd);
 ssize_t recv_timeout(int fd, void *buffer, size_t len, int timeout_sec);
 ssize_t send_timeout(int fd, void *buffer, size_t len, int timeout_sec);
 fd_set oneval_fd_set(int fd);
+int wait_readable(int fd, double timeout_sec);
+int wait_writable(int fd, double timeout_sec);
+int select_one(int readfd, int writefd,  double timeout_sec);
 
 
 // conn_vector.c
