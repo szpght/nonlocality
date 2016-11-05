@@ -48,33 +48,16 @@ void die(char *msg) {
 
 
 ssize_t receive_amount(int fd, void *buffer, size_t len) {
-    ssize_t received = 0;
-    while (received < len) {
-        ssize_t last_received = recv(fd, buffer + received, len - received, 0);
-        if (last_received == 0 || last_received == -1)
-            break;
-        received += last_received;
-    }
-    return received;
+    return receive_amount_timeout(fd, buffer, len, 0);
 }
 
 
 ssize_t send_amount(int fd, void *buffer, size_t len) {
-    ssize_t sent = 0;
-    while (sent < len) {
-        ssize_t last_sent = send(fd, buffer + sent, len - sent, 0);
-        if (last_sent == -1) {
-            printf("send returned -1, errno: %d\n", errno);
-            return sent;
-        }
-        sent += last_sent;
-    }
-    return sent;
+    return send_amount_timeout(fd, buffer ,len, 0);
 }
 
 
 ssize_t send_amount_timeout(int fd, void *buffer, size_t len, int timeout_sec) {
-    // TODO think of something more abstract
     ssize_t sent = 0;
     while (sent < len) {
         ssize_t last_sent = send_timeout(fd, buffer + sent, len - sent, timeout_sec);
@@ -311,7 +294,7 @@ int select_one(int readfd, int writefd,  double timeout_sec) {
     struct timeval timeout, *ptimeout;
     if (timeout_sec) {
         int ms = (int) (modf(timeout_sec, &(double){0}) * 10e6);
-        timeout = { (int) timeout_sec, ms };
+        timeout = (struct timeval) { (int) timeout_sec, ms };
         ptimeout = &timeout;
     }
     else
