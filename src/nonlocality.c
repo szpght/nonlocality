@@ -308,7 +308,13 @@ int select_one(int readfd, int writefd,  double timeout_sec) {
     fd_set readfds = oneval_fd_set(readfd);
     fd_set writefds = oneval_fd_set(writefd);
     int maxfd = readfd > writefd ? readfd : writefd;
-    int ms = (int) (modf(timeout_sec, &(double){0}) * 10e6);
-    struct timeval timeout = { (int) timeout_sec, ms };
-    return select(maxfd + 1, &readfds, &writefds, NULL, &timeout);
+    struct timeval timeout, *ptimeout;
+    if (timeout_sec) {
+        int ms = (int) (modf(timeout_sec, &(double){0}) * 10e6);
+        timeout = { (int) timeout_sec, ms };
+        ptimeout = &timeout;
+    }
+    else
+        ptimeout = NULL;
+    return select(maxfd + 1, &readfds, &writefds, NULL, ptimeout);
 }
