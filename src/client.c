@@ -68,6 +68,12 @@ int main(int argc, char **argv) {
         // create connection to machine behind firewall
         conn.client = connect_from_str(destination_ip, tunneled_port);
 
+        if (conn.client == -1) {
+            sequence_message(conn.seq, "could not connect to client");
+            close(conn.server);
+            continue;
+        }
+
         // add connection to list
         pthread_mutex_lock(&connections.mutex);
         vector_add(&connections, conn);
