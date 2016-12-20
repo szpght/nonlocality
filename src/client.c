@@ -5,12 +5,15 @@
 #include <signal.h>
 #include "nonlocality.h"
 #include "client.h"
+#include "version.h"
 
 
 ConnectionVector connections;
 
 
 int main(int argc, char **argv) {
+    puts("nonlocality client");
+    print_version();
     if (argc < 6) {
         die("Usage: <server ip> <dest ip> <tunneled port> <control port> <data port>");
     }

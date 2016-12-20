@@ -7,6 +7,7 @@
 #include <signal.h>
 #include "nonlocality.h"
 #include "server.h"
+#include "version.h"
 
 
 ServerState state = { .seq = 1 };
@@ -14,6 +15,8 @@ ConnectionVector connections;
 
 
 int main(int argc, char **argv) {
+    puts("nonlocality server");
+    print_version();
     if (argc < 4) {
         die("Usage: <tunneled port> <control port> <data port>");
     }
