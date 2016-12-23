@@ -4,7 +4,7 @@ Tool for tunneling IPv4 TCP connections to hosts behind firewall. Has little to 
 ## Build
 Build with cmake:
 ```
-git clone git@github.com:szpght/nonlocality.git
+git clone https://github.com/szpght/nonlocality.git
 cd nonlocality
 cmake .
 make
